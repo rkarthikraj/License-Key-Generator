@@ -1,13 +1,12 @@
 package com.license.utils;
 
-import javax.crypto.Cipher;
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
-import javax.crypto.SecretKeyFactory;
+import javax.crypto.*;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.ByteBuffer;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
@@ -41,22 +40,28 @@ public class LicenseKeyGenerator {
     }
 
     // Return a base64 encoded AES encrypted text
-    public static String encrypt(byte[] pText, String password) throws Exception {
+    public static String encrypt(byte[] pText, String password) {
         byte[] salt = getRandomNonce(licenseConstants.SALT_LENGTH_BYTE);
         byte[] iv = getRandomNonce(licenseConstants.IV_LENGTH_BYTE);
 
-        SecretKey aesKeyFromPassword = getAESKeyFromPassword(password.toCharArray(), salt);
-        Cipher cipher = Cipher.getInstance(licenseConstants.ENCRYPT_ALGO);
-        cipher.init(Cipher.ENCRYPT_MODE, aesKeyFromPassword, new GCMParameterSpec(licenseConstants.TAG_LENGTH_BIT, iv));
+        try {
+            SecretKey aesKeyFromPassword = getAESKeyFromPassword(password.toCharArray(), salt);
+            Cipher cipher = Cipher.getInstance(licenseConstants.ENCRYPT_ALGO);
+            cipher.init(Cipher.ENCRYPT_MODE, aesKeyFromPassword, new GCMParameterSpec(licenseConstants.TAG_LENGTH_BIT, iv));
 
-        byte[] cipherText = cipher.doFinal(pText);
-        byte[] cipherTextWithIvSalt = ByteBuffer.allocate(iv.length + salt.length + cipherText.length).put(iv).put(salt).put(cipherText).array();
+            byte[] cipherText = new byte[0];
+            cipherText = cipher.doFinal(pText);
+            byte[] cipherTextWithIvSalt = ByteBuffer.allocate(iv.length + salt.length + cipherText.length).put(iv).put(salt).put(cipherText).array();
+            return Base64.getEncoder().encodeToString(cipherTextWithIvSalt);
+        } catch (InvalidAlgorithmParameterException | NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeySpecException | BadPaddingException | IllegalBlockSizeException | InvalidKeyException e) {
+            e.printStackTrace();
+        }
 
-        return Base64.getEncoder().encodeToString(cipherTextWithIvSalt);
+        return null;
     }
 
     // We need the same password, salt and iv to decrypt it
-    public static String decrypt(String cText, String password) throws Exception {
+    public static String decrypt(String cText, String password) {
         byte[] decode = Base64.getDecoder().decode(cText.getBytes(licenseConstants.UTF_8));
 
         ByteBuffer bb = ByteBuffer.wrap(decode);
@@ -69,12 +74,17 @@ public class LicenseKeyGenerator {
         byte[] cipherText = new byte[bb.remaining()];
         bb.get(cipherText);
 
-        SecretKey aesKeyFromPassword = getAESKeyFromPassword(password.toCharArray(), salt);
-        Cipher cipher = Cipher.getInstance(licenseConstants.ENCRYPT_ALGO);
-        cipher.init(Cipher.DECRYPT_MODE, aesKeyFromPassword, new GCMParameterSpec(licenseConstants.TAG_LENGTH_BIT, iv));
-        byte[] plainText = cipher.doFinal(cipherText);
+        try {
+            SecretKey aesKeyFromPassword = getAESKeyFromPassword(password.toCharArray(), salt);
+            Cipher cipher = Cipher.getInstance(licenseConstants.ENCRYPT_ALGO);
+            cipher.init(Cipher.DECRYPT_MODE, aesKeyFromPassword, new GCMParameterSpec(licenseConstants.TAG_LENGTH_BIT, iv));
+            byte[] plainText = cipher.doFinal(cipherText);
+            return new String(plainText, licenseConstants.UTF_8);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
-        return new String(plainText, licenseConstants.UTF_8);
+        return null;
     }
 
     // AES secret key

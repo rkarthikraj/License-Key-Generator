@@ -1,10 +1,11 @@
 package com.license.controller;
 
-import com.license.request.LicenseKeyRequest;
-import com.license.request.LicenseRequest;
-import com.license.response.LicenseKeyResponse;
-import com.license.response.LicenseResponse;
+import com.license.request.GenerateLicenseKeyRequest;
+import com.license.request.ValidateLicenseKeyRequest;
+import com.license.response.GenerateLicenseKeyResponse;
+import com.license.response.ValidateLicenseKeyResponse;
 import com.license.service.LicenseService;
+import com.license.utils.LicenseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,17 +19,27 @@ public class LicenseController {
     private LicenseService licenseService;
 
     @RequestMapping(method = RequestMethod.POST, value = "/generate-license")
-    public LicenseKeyResponse generateLicense(@RequestBody LicenseRequest licenseInfoRequest) throws Exception {
-        LicenseKeyResponse licenseKeyResponse = new LicenseKeyResponse();
-        licenseKeyResponse = licenseService.generateLicense(licenseInfoRequest);
-        return licenseKeyResponse;
+    public GenerateLicenseKeyResponse generateLicense(@RequestBody GenerateLicenseKeyRequest licenseInfoRequest) {
+        GenerateLicenseKeyResponse generateLicenseKeyResponse = null;
+        try {
+            generateLicenseKeyResponse = licenseService.generateLicense(licenseInfoRequest);
+        } catch (LicenseException e) {
+            generateLicenseKeyResponse = new GenerateLicenseKeyResponse();
+            generateLicenseKeyResponse.setErrorMessage(e.getMessage());
+        }
+        return generateLicenseKeyResponse;
     }
 
     @RequestMapping(method = RequestMethod.POST, value = "/validate-license")
-    public LicenseResponse validateLicense(@RequestBody LicenseKeyRequest licenseKeyRequest) throws Exception {
-        LicenseResponse licenseResponse = new LicenseResponse();
-        licenseResponse = licenseService.validateLicense(licenseKeyRequest);
-        return licenseResponse;
+    public ValidateLicenseKeyResponse validateLicense(@RequestBody ValidateLicenseKeyRequest licenseKeyRequest) throws Exception {
+        ValidateLicenseKeyResponse validateLicenseKeyResponse = null;
+        try {
+            validateLicenseKeyResponse = licenseService.validateLicense(licenseKeyRequest);
+        } catch (Exception e) {
+            validateLicenseKeyResponse = new ValidateLicenseKeyResponse();
+            validateLicenseKeyResponse.setErrorMessage(e.getMessage());
+        }
+        return validateLicenseKeyResponse;
     }
 }
 

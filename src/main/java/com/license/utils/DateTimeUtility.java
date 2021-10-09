@@ -6,10 +6,17 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class DateTimeUtility {
-    public String generateTimestamp(String inputDate) throws ParseException {
-        Date date = new SimpleDateFormat("yyyy-MM-dd").parse(inputDate);
-        long timestamp = date.getTime();
-        return Long.toString(timestamp);
+    public String generateTimestamp(String inputDate) {
+
+        Date date = null;
+        try {
+            date = new SimpleDateFormat("yyyy-MM-dd").parse(inputDate);
+            long timestamp = date.getTime();
+            return Long.toString(timestamp);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     public String generateDate(String timestamp) {

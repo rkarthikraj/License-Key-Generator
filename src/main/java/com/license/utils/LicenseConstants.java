@@ -5,7 +5,6 @@ import java.nio.charset.StandardCharsets;
 
 public class LicenseConstants {
     public static final String ENCRYPT_ALGO = "AES/GCM/NoPadding";
-    public static final int AES_KEY_BIT = 256;
     public static final int TAG_LENGTH_BIT = 128;
     public static final int IV_LENGTH_BYTE = 12;
     public static final int SALT_LENGTH_BYTE = 16;
